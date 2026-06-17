@@ -37,9 +37,7 @@ internal static class ZfsTasks
         {
             zfsInheritTasks.Add( commandRunner.InheritZfsPropertyAsync( dryRun, zfsPath, property ).ContinueWith( async inheritTask =>
             {
-            #if DEBUG
-                Logger.Trace( "ZFS inherit operation continuation received" );
-            #endif
+                Logger.ConditionalTrace( "ZFS inherit operation continuation received" );
                 ZfsCommandRunnerOperationStatus inheritResult = await inheritTask.ConfigureAwait( false );
                 switch ( inheritResult )
                 {
