@@ -592,98 +592,109 @@ public sealed partial class ZfsConfigurationWindow
 
     private async void SaveCurrentButtonOnClicked( )
     {
-        try
+      string? zfsObjectPath = null;
+      try
+      {
+        DisableEventHandlers ( );
+
+        if ( ConfigConsole.CommandRunner is null )
         {
-            DisableEventHandlers( );
-
-            if ( ConfigConsole.CommandRunner is null )
-            {
-                Logger.Error( "ZFS Command runner is null. Cannot continue with save operation" );
-            }
-
-            if ( !SelectedTreeNode.IsModified || !SelectedTreeNode.IsLocallyModified )
-            {
-                Logger.Info( "Selected ZFS object was not modified when save was requested. This should not happen" );
-                return;
-            }
-
-            string zfsObjectPath = SelectedTreeNode.TreeDataset.Name;
-            bool areAnyPropertiesModified = SelectedTreeNode.IsLocallyModified;
-            bool areAnyPropertiesInherited = SelectedTreeNode.GetInheritedZfsProperties( out List<IZfsProperty>? inheritedZfsProperties );
-            List<string> pendingCommands = [];
-            if ( areAnyPropertiesModified )
-            {
-                SelectedTreeNode.GetModifiedZfsProperties( out List<IZfsProperty>? modifiedZfsProperties );
-                pendingCommands.Add( $"zfs set {modifiedZfsProperties!.ToStringForZfsSet( )} {zfsObjectPath}" );
-            }
-
-            if ( areAnyPropertiesInherited )
-            {
-                pendingCommands.AddRange( inheritedZfsProperties!.Select( inheritedProperty => $"zfs inherit {inheritedProperty.Name} {zfsObjectPath}" ) );
-            }
-
-            int dialogResult = MessageBox.ErrorQuery( "Confirm Saving ZFS Object Configuration", $"The following commands will be executed:\n{pendingCommands.ToNewlineSeparatedString( )}\n\nTHIS OPERATION CANNOT BE UNDONE", 0, "Cancel", "Save" );
-
-            switch ( dialogResult )
-            {
-                case 0:
-                    Logger.Debug( "User canceled save confirmation for ZFS object {0}", zfsObjectPath );
-                    return;
-                case 1:
-                    Logger.Debug( "User confirmed the pending zfs set operation {0}", pendingCommands.ToNewlineSeparatedString( ) );
-                    break;
-            }
-
-            Logger.Info( "Saving changes to {0}", zfsObjectPath );
-            if ( areAnyPropertiesModified )
-            {
-                SelectedTreeNode.GetModifiedZfsProperties( out List<IZfsProperty>? modifiedZfsProperties );
-                ZfsCommandRunnerOperationStatus setPropertiesResult = await ZfsTasks.SetPropertiesForDatasetAsync( Program.Settings!.DryRun, zfsObjectPath, modifiedZfsProperties!, ConfigConsole.CommandRunner! ).ConfigureAwait( true );
-                Logger.Trace( "Set properties result was {0}", setPropertiesResult );
-                switch ( setPropertiesResult )
-                {
-                    case ZfsCommandRunnerOperationStatus.Success:
-                        Logger.Debug( "Set properties operation successful for {0}", zfsObjectPath );
-                        break;
-                    case ZfsCommandRunnerOperationStatus.DryRun:
-                        Logger.Info( "DRY RUN: Pretending set properties operation was successful for {0}", zfsObjectPath );
-                        break;
-                    // ReSharper disable once RedundantEnumCaseLabelForDefaultSection
-                    case ZfsCommandRunnerOperationStatus.OneOrMoreOperationsFailed:
-                    default:
-                        Logger.Error( "Setting ZFS properties for ZFS object {0} failed", zfsObjectPath );
-                        break;
-                }
-            }
-
-            if ( areAnyPropertiesInherited )
-            {
-                ZfsCommandRunnerOperationStatus inheritPropertiesResult = await ZfsTasks.InheritPropertiesForDatasetAsync( Program.Settings!.DryRun, zfsObjectPath, inheritedZfsProperties!, ConfigConsole.CommandRunner! ).ConfigureAwait( true );
-                switch ( inheritPropertiesResult )
-                {
-                    case ZfsCommandRunnerOperationStatus.Success:
-                        Logger.Info( "DRY RUN: Pretending all requested properties were inherited successfully for {0}", zfsObjectPath );
-                        break;
-                    case ZfsCommandRunnerOperationStatus.DryRun:
-                        Logger.Info( "DRY RUN: Pretending all requested properties were inherited successfully for {0}", zfsObjectPath );
-                        break;
-                    // ReSharper disable once RedundantEnumCaseLabelForDefaultSection
-                    case ZfsCommandRunnerOperationStatus.OneOrMoreOperationsFailed:
-                    default:
-                        Logger.Error( "Inheriting ZFS properties for ZFS object {0} failed", zfsObjectPath );
-                        break;
-                }
-            }
-
-            Logger.Debug( "Applying inheritable properties to children of {0} in tree", zfsObjectPath );
-            SelectedTreeNode.CopyTreeDatasetPropertiesToBaseDataset( );
+          Logger.Error ( "ZFS Command runner is null. Cannot continue with save operation" );
         }
-        finally
+
+        if ( !SelectedTreeNode.IsModified || !SelectedTreeNode.IsLocallyModified )
         {
-            UpdateFieldsForSelectedZfsTreeNode( false );
-            UpdateButtonState( );
-            EnableEventHandlers( );
+          Logger.Info ( "Selected ZFS object was not modified when save was requested. This should not happen" );
+          return;
         }
+
+        zfsObjectPath = SelectedTreeNode.TreeDataset.Name;
+        bool         areAnyPropertiesModified  = SelectedTreeNode.IsLocallyModified;
+        bool         areAnyPropertiesInherited = SelectedTreeNode.GetInheritedZfsProperties ( out List<IZfsProperty>? inheritedZfsProperties );
+        List<string> pendingCommands           = [ ];
+        if ( areAnyPropertiesModified )
+        {
+          SelectedTreeNode.GetModifiedZfsProperties ( out List<IZfsProperty>? modifiedZfsProperties );
+          pendingCommands.Add ( $"zfs set {modifiedZfsProperties!.ToStringForZfsSet ( )} {zfsObjectPath}" );
+        }
+
+        if ( areAnyPropertiesInherited )
+        {
+          pendingCommands.AddRange ( inheritedZfsProperties!.Select ( inheritedProperty => $"zfs inherit {inheritedProperty.Name} {zfsObjectPath}" ) );
+        }
+
+        int dialogResult = MessageBox.ErrorQuery ( "Confirm Saving ZFS Object Configuration", $"The following commands will be executed:\n{pendingCommands.ToNewlineSeparatedString ( )}\n\nTHIS OPERATION CANNOT BE UNDONE", 0, "Cancel", "Save" );
+
+        switch ( dialogResult )
+        {
+          case 0:
+            Logger.Debug ( "User canceled save confirmation for ZFS object {0}", zfsObjectPath );
+            return;
+          case 1:
+            Logger.Debug ( "User confirmed the pending zfs set operation {0}", pendingCommands.ToNewlineSeparatedString ( ) );
+            break;
+        }
+
+        Logger.Info ( "Saving changes to {0}", zfsObjectPath );
+        if ( areAnyPropertiesModified )
+        {
+          SelectedTreeNode.GetModifiedZfsProperties ( out List<IZfsProperty>? modifiedZfsProperties );
+          ZfsCommandRunnerOperationStatus setPropertiesResult = await ZfsTasks.SetPropertiesForDatasetAsync ( Program.Settings!.DryRun, zfsObjectPath, modifiedZfsProperties!, ConfigConsole.CommandRunner! ).ConfigureAwait ( true );
+          Logger.Trace ( "Set properties result was {0}", setPropertiesResult );
+          switch ( setPropertiesResult )
+          {
+            case ZfsCommandRunnerOperationStatus.Success:
+              Logger.Debug ( "Set properties operation successful for {0}", zfsObjectPath );
+              break;
+            case ZfsCommandRunnerOperationStatus.DryRun:
+              Logger.Info ( "DRY RUN: Pretending set properties operation was successful for {0}", zfsObjectPath );
+              break;
+
+            // ReSharper disable once RedundantEnumCaseLabelForDefaultSection
+            case ZfsCommandRunnerOperationStatus.OneOrMoreOperationsFailed:
+            default:
+              Logger.Error ( "Setting ZFS properties for ZFS object {0} failed", zfsObjectPath );
+              break;
+          }
+        }
+
+        if ( areAnyPropertiesInherited )
+        {
+          ZfsCommandRunnerOperationStatus inheritPropertiesResult = await ZfsTasks.InheritPropertiesForDatasetAsync ( Program.Settings!.DryRun, zfsObjectPath, inheritedZfsProperties!, ConfigConsole.CommandRunner! ).ConfigureAwait ( true );
+          switch ( inheritPropertiesResult )
+          {
+            case ZfsCommandRunnerOperationStatus.Success:
+              Logger.Info ( "DRY RUN: Pretending all requested properties were inherited successfully for {0}", zfsObjectPath );
+              break;
+            case ZfsCommandRunnerOperationStatus.DryRun:
+              Logger.Info ( "DRY RUN: Pretending all requested properties were inherited successfully for {0}", zfsObjectPath );
+              break;
+
+            // ReSharper disable once RedundantEnumCaseLabelForDefaultSection
+            case ZfsCommandRunnerOperationStatus.OneOrMoreOperationsFailed:
+            default:
+              Logger.Error ( "Inheriting ZFS properties for ZFS object {0} failed", zfsObjectPath );
+              break;
+          }
+        }
+
+        Logger.Debug ( "Applying inheritable properties to children of {0} in tree", zfsObjectPath );
+        SelectedTreeNode.CopyTreeDatasetPropertiesToBaseDataset ( );
+      }
+      catch ( Exception ex ) when ( zfsObjectPath is not null )
+      {
+        Logger.Error ( ex, "Error saving properties for {0}", zfsObjectPath );
+      }
+      catch ( Exception ex )
+      {
+        Logger.Error ( ex, "Error saving properties. Invalid ZFS dataset selection." );
+      }
+      finally
+      {
+        UpdateFieldsForSelectedZfsTreeNode ( false );
+        UpdateButtonState ( );
+        EnableEventHandlers ( );
+      }
     }
 
     private void SetCanFocusStates( )
