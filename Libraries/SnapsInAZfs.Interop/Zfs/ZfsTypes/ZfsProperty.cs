@@ -1,6 +1,6 @@
 #region MIT LICENSE
 
-// Copyright 2025 Brandon Thetford
+// Copyright 2026 Brandon Thetford
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 // 
@@ -12,490 +12,162 @@
 
 #endregion
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Text.Json.Serialization;
-using SnapsInAZfs.Interop.Zfs.ZfsCommandRunner;
 
 namespace SnapsInAZfs.Interop.Zfs.ZfsTypes;
 
 public readonly struct ZfsProperty<T> : IZfsProperty, IEquatable<int>, IEquatable<string>, IEquatable<bool>, IEquatable<DateTimeOffset>, IEquatable<ZfsProperty<T>>, IEqualityOperators<ZfsProperty<T>, ZfsProperty<T>, bool> where T : notnull
 {
-    // ReSharper disable once StaticMemberInGenericType
-    private static readonly Logger Logger = LogManager.GetLogger ( $"{StringConstants.ZfsTypesNamespace}.{nameof (ZfsProperty<T>)}" );
-
-    private ZfsProperty ( string name, in T value, bool isLocal = true )
-    {
-        Name    = name;
-        Value   = value;
-        IsLocal = isLocal;
-    }
-
-    public ZfsProperty ( ZfsRecord owner, string name, in T value, bool isLocal = true )
-    {
-        Owner   = owner;
-        Name    = name;
-        Value   = value;
-        IsLocal = isLocal;
-    }
-
-    // ReSharper disable once HeapView.ObjectAllocation
-    public string InheritedFrom => IsLocal ? ZfsPropertySourceConstants.Local : Source [ 15.. ];
+  public ZfsProperty ( )
+  {
+    Name  = string.Empty;
+    Value = default!;
+  }
+
+  internal ZfsProperty ( string name, in T value, bool isLocal = true )
+  {
+    Name    = name;
+    Value   = value;
+    IsLocal = isLocal;
+  }
+
+  public ZfsProperty ( ZfsRecord owner, string name, in T value, bool isLocal = true )
+  {
+    Owner   = owner;
+    Name    = name;
+    Value   = value;
+    IsLocal = isLocal;
+  }
+
+  public string InheritedFrom => IsLocal ? ZfsPropertySourceConstants.Local : Source [ 15.. ];
+
+  [JsonIgnore]
+  public bool IsInherited => !IsLocal;
+
+  public T Value { get; init; }
+
+  /// <inheritdoc />
+  public static bool operator == ( ZfsProperty<T> left, ZfsProperty<T> right ) => left.Equals ( right );
+
+  /// <inheritdoc />
+  public static bool operator != ( ZfsProperty<T> left, ZfsProperty<T> right ) => !left.Equals ( right );
+
+  /// <inheritdoc />
+  public bool Equals ( bool other ) => Value is bool v && v == other;
 
-    [JsonIgnore]
-    public bool IsInherited => !IsLocal;
+  /// <inheritdoc />
+  public bool Equals ( DateTimeOffset other ) => Value is DateTimeOffset v && v == other;
 
-    public T Value { get; init; }
-
-    /// <inheritdoc/>
-    public static bool operator == ( ZfsProperty<T> left, ZfsProperty<T> right ) => left.Equals ( right );
+  /// <inheritdoc />
+  public bool Equals ( int other ) => Value is int v && v == other;
 
-    /// <inheritdoc/>
-    public static bool operator != ( ZfsProperty<T> left, ZfsProperty<T> right ) => !left.Equals ( right );
+  /// <inheritdoc />
+  public bool Equals ( string? other ) => Value is string v && v == other;
 
-    /// <inheritdoc/>
-    public bool Equals ( bool other ) => Value is bool v && v == other;
-
-    /// <inheritdoc/>
-    public bool Equals ( DateTimeOffset other ) => Value is DateTimeOffset v && v == other;
-
-    /// <inheritdoc/>
-    public bool Equals ( int other ) => Value is int v && v == other;
-
-    /// <inheritdoc/>
-    public bool Equals ( string? other ) => Value is string v && v == other;
-
-    /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})"/>
-    public bool Equals ( ZfsProperty<bool> other ) => Value is bool v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
-
-    /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})"/>
-    public bool Equals ( ZfsProperty<DateTimeOffset> other ) => Value is DateTimeOffset v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
-
-    /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})"/>
-    public bool Equals ( ZfsProperty<int> other ) => Value is int v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
-
-    /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})"/>
-    public bool Equals ( ZfsProperty<string> other ) => Value is string v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
+  /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})" />
+  public bool Equals ( ZfsProperty<bool> other ) => Value is bool v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
 
-    /// <inheritdoc/>
-    public bool Equals ( ZfsProperty<T> other ) =>
-        EqualityComparer<T>.Default
-                           .Equals ( Value, other.Value )
-     && Equals ( Owner, other.Owner )
-     && Name == other.Name;
+  /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})" />
+  public bool Equals ( ZfsProperty<DateTimeOffset> other ) => Value is DateTimeOffset v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
 
-    [JsonIgnore]
-    public string Source => IsLocal switch
-                            {
-                                true                     => ZfsPropertySourceConstants.Local,
-                                false when Owner is null => ZfsPropertySourceConstants.None,
+  /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})" />
+  public bool Equals ( ZfsProperty<int> other ) => Value is int v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
 
-                                // ReSharper disable once HeapView.ObjectAllocation
-                                false when Owner.ParentDataset [ Name ].IsLocal => $"inherited from {Owner.ParentDataset.Name}",
-                                false                                           => Owner.ParentDataset [ Name ].Source
-                            };
+  /// <inheritdoc cref="Equals(SnapsInAZfs.Interop.Zfs.ZfsTypes.ZfsProperty{T})" />
+  public bool Equals ( ZfsProperty<string> other ) => Value is string v && Name == other.Name && v == other.Value && IsLocal == other.IsLocal;
 
-    [JsonIgnore]
-    public ZfsRecord? Owner { get; init; }
+  /// <inheritdoc />
+  public bool Equals ( ZfsProperty<T> other ) =>
+    EqualityComparer<T>.Default
+                       .Equals ( Value, other.Value )
+ && Equals ( Owner, other.Owner )
+ && Name == other.Name;
 
-    /// <summary>
-    ///     Gets a string representation of the Value property, in an appropriate form for its type
-    /// </summary>
-    [JsonIgnore]
-    public string ValueString => Value switch
-                                 {
-                                     int intValue            => intValue.ToString ( CultureInfo.InvariantCulture ),
-                                     string value            => value,
-                                     bool boolValue          => boolValue.ToString ( ).ToLowerInvariant ( ),
-                                     DateTimeOffset dtoValue => dtoValue.ToString ( "O" ),
-                                     _                         => throw new ArgumentOutOfRangeException ( )
-                                 };
+  [JsonIgnore]
+  public string Source => IsLocal switch
+                          {
+                            true                     => ZfsPropertySourceConstants.Local,
+                            false when Owner is null => ZfsPropertySourceConstants.None,
 
-    [JsonIgnore]
+                            // ReSharper disable once HeapView.ObjectAllocation
+                            false when Owner.ParentDataset [ Name ].IsLocal => $"inherited from {Owner.ParentDataset.Name}",
+                            false                                           => Owner.ParentDataset [ Name ].Source
+                          };
 
-    // ReSharper disable once HeapView.ObjectAllocation
-    public string SetString => $"{Name}={ValueString}";
+  [JsonIgnore]
+  public ZfsRecord? Owner { get; init; }
 
-    public string Name    { get; init; }
-    public bool   IsLocal { get; init; }
+  /// <summary>
+  ///   Gets a string representation of the Value property, in an appropriate form for its type
+  /// </summary>
+  [JsonIgnore]
+  public string ValueString => Value switch
+                               {
+                                 int intValue            => intValue.ToString ( CultureInfo.InvariantCulture ),
+                                 string value            => value,
+                                 bool boolValue          => boolValue.ToString ( ).ToLowerInvariant ( ),
+                                 DateTimeOffset dtoValue => dtoValue.ToString ( "O" ),
+                                 _                       => throw new ArgumentOutOfRangeException ( )
+                               };
 
-    public static ZfsProperty<bool> CreateWithoutParent ( string name, in bool value, bool isLocal = true )
-    {
-        Logger.Trace ( "Creating ZfsProperty<bool> {0} without parent dataset", name );
+  [JsonIgnore]
 
-        return new ( name, in value, isLocal );
-    }
+  // ReSharper disable once HeapView.ObjectAllocation
+  public string SetString => $"{Name}={ValueString}";
 
-    public static ZfsProperty<int> CreateWithoutParent ( string name, in int value, bool isLocal = true )
-    {
-        Logger.Trace ( "Creating ZfsProperty<int> {0} without parent dataset", name );
+  public string Name { get; init; }
+  public bool IsLocal { get; init; }
 
-        return new ( name, in value, isLocal );
-    }
+  /// <inheritdoc />
+  public override bool Equals ( object? obj )
+  {
+    return obj switch
+           {
+             ZfsProperty<int> other            => Equals ( other ),
+             ZfsProperty<bool> other           => Equals ( other ),
+             ZfsProperty<DateTimeOffset> other => Equals ( other ),
+             ZfsProperty<string> other         => Equals ( other ),
+             ZfsProperty<T> other              => Equals ( other ),
+             null                              => false,
+             IZfsProperty other                => other.Equals ( this ),
+             _                                 => false
+           };
+  }
 
-    public static ZfsProperty<string> CreateWithoutParent ( string name, string value, bool isLocal = true )
-    {
-        Logger.Trace ( "Creating ZfsProperty<string> {0} without parent dataset", name );
+  /// <inheritdoc />
+  public override int GetHashCode ( ) => HashCode.Combine ( Value, Name, IsLocal );
 
-        return new ( name, in value, isLocal );
-    }
+  public static bool operator == ( ZfsProperty<T> left, bool right ) => left.Equals ( right );
 
-    public static ZfsProperty<DateTimeOffset> CreateWithoutParent ( string name, in DateTimeOffset value, bool isLocal = true )
-    {
-        Logger.Trace ( "Creating ZfsProperty<DateTimeOffset> {0} without parent dataset", name );
+  public static bool operator == ( ZfsProperty<T> left, int right ) => left.Equals ( right );
 
-        return new ( name, in value, isLocal );
-    }
-
-    public static ZfsProperty<T> DefaultProperty ( ) => new ( );
-
-    /// <inheritdoc/>
-    public override bool Equals ( object? obj )
-    {
-        return obj switch
-               {
-                   ZfsProperty<int> other            => Equals ( other ),
-                   ZfsProperty<bool> other           => Equals ( other ),
-                   ZfsProperty<DateTimeOffset> other => Equals ( other ),
-                   ZfsProperty<string> other         => Equals ( other ),
-                   ZfsProperty<T> other              => Equals ( other ),
-                   null                              => false,
-                   IZfsProperty other                => other.Equals ( this ),
-                   _                                 => false
-               };
-    }
-
-    /// <inheritdoc/>
-    public override int GetHashCode ( ) => HashCode.Combine ( Value, Name, IsLocal );
-
-    public static bool operator == ( ZfsProperty<T> left, bool right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, int right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, string right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, DateTimeOffset right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, ZfsProperty<bool> right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, ZfsProperty<int> right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, ZfsProperty<string> right ) => left.Equals ( right );
-
-    public static bool operator == ( ZfsProperty<T> left, ZfsProperty<DateTimeOffset> right ) => left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, bool right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, int right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, string right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, DateTimeOffset right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, ZfsProperty<bool> right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, ZfsProperty<int> right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, ZfsProperty<string> right ) => !left.Equals ( right );
-
-    public static bool operator != ( ZfsProperty<T> left, ZfsProperty<DateTimeOffset> right ) => !left.Equals ( right );
-
-    /// <summary>
-    ///     Attempts to parse a <see cref="RawProperty"/> as its <see cref="ZfsProperty{T}"/> (<see langword="bool"/>) equivalent
-    /// </summary>
-    /// <param name="input">The <see cref="RawProperty"/> to parse</param>
-    /// <param name="property">
-    ///     The parsed <see cref="ZfsProperty{T}"/> (<see langword="bool"/>), if successful
-    /// </param>
-    /// <returns>
-    ///     <see langword="true"/> if <paramref name="input"/> was parsed successfully; otherwise <see langword="false"/>
-    /// </returns>
-    /// <remarks>
-    ///     <paramref name="property"/> is never null when this method returns <see langword="true"/>; otherwise,
-    ///     <paramref name="property"/> is always <see langword="null"/>
-    /// </remarks>
-    public static bool TryParse ( RawProperty input, [NotNullWhen ( true )] out ZfsProperty<bool>? property )
-    {
-        property = null;
-
-        // ReSharper disable once InvertIf
-        if ( bool.TryParse ( input.Value, out bool result ) )
-        {
-            property = ZfsProperty<bool>.CreateWithoutParent ( input.Name, result, input.Source == ZfsPropertySourceConstants.Local );
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    ///     Attempts to parse a <see cref="RawProperty"/> as its <see cref="ZfsProperty{T}"/> (<see langword="int"/>) equivalent
-    /// </summary>
-    /// <param name="input">The <see cref="RawProperty"/> to parse</param>
-    /// <param name="property">
-    ///     The parsed <see cref="ZfsProperty{T}"/> (<see langword="int"/>), if successful
-    /// </param>
-    /// <returns>
-    ///     <see langword="true"/> if <paramref name="input"/> was parsed successfully; otherwise <see langword="false"/>
-    /// </returns>
-    /// <remarks>
-    ///     <paramref name="property"/> is never null when this method returns <see langword="true"/>; otherwise,
-    ///     <paramref name="property"/> is always <see langword="null"/>
-    /// </remarks>
-    public static bool TryParse ( RawProperty input, [NotNullWhen ( true )] out ZfsProperty<int>? property )
-    {
-        if ( int.TryParse ( input.Value, out int result ) )
-        {
-            property = ZfsProperty<int>.CreateWithoutParent ( input.Name, result, input.Source == ZfsPropertySourceConstants.Local );
-
-            return true;
-        }
-
-        property = null;
-
-        return false;
-    }
-
-    /// <summary>
-    ///     Attempts to parse a <see cref="RawProperty"/> as its <see cref="ZfsProperty{T}"/> (<see cref="DateTimeOffset"/>)
-    ///     equivalent
-    /// </summary>
-    /// <param name="input">The <see cref="RawProperty"/> to parse</param>
-    /// <param name="property">
-    ///     The parsed <see cref="ZfsProperty{T}"/> (<see cref="DateTimeOffset"/>), if successful
-    /// </param>
-    /// <returns>
-    ///     <see langword="true"/> if <paramref name="input"/> was parsed successfully; otherwise <see langword="false"/>
-    /// </returns>
-    /// <remarks>
-    ///     <paramref name="property"/> is never null when this method returns <see langword="true"/>; otherwise,
-    ///     <paramref name="property"/> is always <see langword="null"/>
-    /// </remarks>
-    public static bool TryParse ( RawProperty input, [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? property )
-    {
-        if ( DateTimeOffset.TryParse ( input.Value, out DateTimeOffset result ) )
-        {
-            property = ZfsProperty<DateTimeOffset>.CreateWithoutParent ( input.Name, result, input.Source == ZfsPropertySourceConstants.Local );
-
-            return true;
-        }
-
-        property = null;
-
-        return false;
-    }
-
-    public static bool TryParseDatasetPropertiesFromRawZfsObject (
-        string                                                  dsName,
-        RawZfsObject                                            rawZfsObject,
-        [NotNullWhen ( true )] out ZfsProperty<bool>?           enabled,
-        [NotNullWhen ( true )] out ZfsProperty<bool>?           takeSnapshots,
-        [NotNullWhen ( true )] out ZfsProperty<bool>?           pruneSnapshots,
-        [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? lastFrequentSnapshotTimestamp,
-        [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? lastHourlySnapshotTimestamp,
-        [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? lastDailySnapshotTimestamp,
-        [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? lastWeeklySnapshotTimestamp,
-        [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? lastMonthlySnapshotTimestamp,
-        [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? lastYearlySnapshotTimestamp,
-        [NotNullWhen ( true )] out ZfsProperty<string>?         recursion,
-        [NotNullWhen ( true )] out ZfsProperty<string>?         template,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionFrequent,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionHourly,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionDaily,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionWeekly,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionMonthly,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionYearly,
-        [NotNullWhen ( true )] out ZfsProperty<int>?            retentionPruneDeferral,
-        [NotNullWhen ( true )] out ZfsProperty<string>?         sourceSystem,
-        out                        long                         bytesAvailable,
-        out                        long                         bytesUsed
-    )
-    {
-        bytesAvailable = 0;
-        bytesUsed      = 0;
-        Unsafe.SkipInit ( out enabled );
-        Unsafe.SkipInit ( out takeSnapshots );
-        Unsafe.SkipInit ( out pruneSnapshots );
-        Unsafe.SkipInit ( out lastFrequentSnapshotTimestamp );
-        Unsafe.SkipInit ( out lastHourlySnapshotTimestamp );
-        Unsafe.SkipInit ( out lastDailySnapshotTimestamp );
-        Unsafe.SkipInit ( out lastWeeklySnapshotTimestamp );
-        Unsafe.SkipInit ( out lastMonthlySnapshotTimestamp );
-        Unsafe.SkipInit ( out lastYearlySnapshotTimestamp );
-        Unsafe.SkipInit ( out recursion );
-        Unsafe.SkipInit ( out template );
-        Unsafe.SkipInit ( out retentionFrequent );
-        Unsafe.SkipInit ( out retentionHourly );
-        Unsafe.SkipInit ( out retentionDaily );
-        Unsafe.SkipInit ( out retentionWeekly );
-        Unsafe.SkipInit ( out retentionMonthly );
-        Unsafe.SkipInit ( out retentionYearly );
-        Unsafe.SkipInit ( out retentionPruneDeferral );
-        Unsafe.SkipInit ( out sourceSystem );
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.EnabledPropertyName, rawZfsObject, out enabled ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.TakeSnapshotsPropertyName, rawZfsObject, out takeSnapshots ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.PruneSnapshotsPropertyName, rawZfsObject, out pruneSnapshots ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.DatasetLastFrequentSnapshotTimestampPropertyName, rawZfsObject, out lastFrequentSnapshotTimestamp ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.DatasetLastHourlySnapshotTimestampPropertyName, rawZfsObject, out lastHourlySnapshotTimestamp ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.DatasetLastDailySnapshotTimestampPropertyName, rawZfsObject, out lastDailySnapshotTimestamp ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.DatasetLastWeeklySnapshotTimestampPropertyName, rawZfsObject, out lastWeeklySnapshotTimestamp ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.DatasetLastMonthlySnapshotTimestampPropertyName, rawZfsObject, out lastMonthlySnapshotTimestamp ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.DatasetLastYearlySnapshotTimestampPropertyName, rawZfsObject, out lastYearlySnapshotTimestamp ) )
-        {
-            return false;
-        }
-
-        recursion    = ZfsProperty<string>.CreateWithoutParent ( ZfsPropertyNames.RecursionPropertyName, rawZfsObject.Properties [ ZfsPropertyNames.RecursionPropertyName ].Value, rawZfsObject.Properties [ ZfsPropertyNames.RecursionPropertyName ].Source == ZfsPropertySourceConstants.Local );
-        sourceSystem = ZfsProperty<string>.CreateWithoutParent ( ZfsPropertyNames.SourceSystem,          rawZfsObject.Properties [ ZfsPropertyNames.SourceSystem ].Value,          rawZfsObject.Properties [ ZfsPropertyNames.SourceSystem ].Source          == ZfsPropertySourceConstants.Local );
-        template     = ZfsProperty<string>.CreateWithoutParent ( ZfsPropertyNames.TemplatePropertyName,  rawZfsObject.Properties [ ZfsPropertyNames.TemplatePropertyName ].Value,  rawZfsObject.Properties [ ZfsPropertyNames.TemplatePropertyName ].Source  == ZfsPropertySourceConstants.Local );
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionFrequentPropertyName, rawZfsObject, out retentionFrequent ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionHourlyPropertyName, rawZfsObject, out retentionHourly ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionDailyPropertyName, rawZfsObject, out retentionDaily ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionWeeklyPropertyName, rawZfsObject, out retentionWeekly ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionMonthlyPropertyName, rawZfsObject, out retentionMonthly ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionYearlyPropertyName, rawZfsObject, out retentionYearly ) )
-        {
-            return false;
-        }
-
-        if ( !TryParsePropertyByName ( dsName, ZfsPropertyNames.SnapshotRetentionPruneDeferralPropertyName, rawZfsObject, out retentionPruneDeferral ) )
-        {
-            return false;
-        }
-
-        if ( rawZfsObject.Kind != ZfsPropertyValueConstants.Snapshot && !long.TryParse ( rawZfsObject.Properties [ ZfsNativePropertyNames.Available ].Value, out bytesAvailable ) )
-        {
-            Logger.Debug ( "{0} value {1} not valid for {2} {3} - skipping object", ZfsNativePropertyNames.Available, rawZfsObject.Properties [ ZfsNativePropertyNames.Available ].Value, rawZfsObject.Kind, dsName );
-
-            bytesAvailable = 0;
-
-            return false;
-        }
-
-        // Keeping this one as-is for consistency with the rest of the method
-        // ReSharper disable once InvertIf
-        if ( rawZfsObject.Kind != ZfsPropertyValueConstants.Snapshot && !long.TryParse ( rawZfsObject.Properties [ ZfsNativePropertyNames.Used ].Value, out bytesUsed ) )
-        {
-            Logger.Debug ( "{0} value {1} not valid for {2} {3} - skipping object", ZfsNativePropertyNames.Used, rawZfsObject.Properties [ ZfsNativePropertyNames.Used ].Value, rawZfsObject.Kind, dsName );
-
-            bytesUsed = 0;
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private static bool TryParsePropertyByName ( string objectName, string propertyName, RawZfsObject rawZfsObject, [NotNullWhen ( true )] out ZfsProperty<bool>? parsedProperty )
-    {
-        Unsafe.SkipInit ( out parsedProperty );
-
-        if ( rawZfsObject.Properties.TryGetValue ( propertyName, out RawProperty rawProp ) )
-        {
-            if ( ZfsProperty<bool>.TryParse ( rawProp, out parsedProperty ) )
-            {
-                return true;
-            }
-
-            Logger.Debug ( "{0} value {1} not valid for {2} {3} - skipping object", propertyName, rawProp.Value, rawZfsObject.Kind, objectName );
-        }
-
-        Logger.Debug ( "Property {0} does not exist for {1} {2} - skipping object", propertyName, rawZfsObject.Kind, objectName );
-
-        return false;
-    }
-
-    private static bool TryParsePropertyByName ( string objectName, string propertyName, RawZfsObject rawZfsObject, [NotNullWhen ( true )] out ZfsProperty<DateTimeOffset>? parsedProperty )
-    {
-        Unsafe.SkipInit ( out parsedProperty );
-
-        if ( rawZfsObject.Properties.TryGetValue ( propertyName, out RawProperty rawProp ) )
-        {
-            if ( ZfsProperty<DateTimeOffset>.TryParse ( rawProp, out parsedProperty ) )
-            {
-                return true;
-            }
-
-            Logger.Debug ( "{0} value {1} not valid for {2} {3} - skipping object", propertyName, rawProp.Value, rawZfsObject.Kind, objectName );
-        }
-
-        Logger.Debug ( "Property {0} does not exist for {1} {2} - skipping object", propertyName, rawZfsObject.Kind, objectName );
-
-        return false;
-    }
-
-    private static bool TryParsePropertyByName ( string objectName, string propertyName, RawZfsObject rawZfsObject, [NotNullWhen ( true )] out ZfsProperty<int>? parsedProperty )
-    {
-        Unsafe.SkipInit ( out parsedProperty );
-
-        if ( rawZfsObject.Properties.TryGetValue ( propertyName, out RawProperty rawProp ) )
-        {
-            if ( ZfsProperty<int>.TryParse ( rawProp, out parsedProperty ) )
-            {
-                return true;
-            }
-
-            Logger.Debug ( "{0} value {1} not valid for {2} {3} - skipping object", propertyName, rawProp.Value, rawZfsObject.Kind, objectName );
-        }
-
-        Logger.Debug ( "Property {0} does not exist for {1} {2} - skipping object", propertyName, rawZfsObject.Kind, objectName );
-
-        return false;
-    }
+  public static bool operator == ( ZfsProperty<T> left, string right ) => left.Equals ( right );
+
+  public static bool operator == ( ZfsProperty<T> left, DateTimeOffset right ) => left.Equals ( right );
+
+  public static bool operator == ( ZfsProperty<T> left, ZfsProperty<bool> right ) => left.Equals ( right );
+
+  public static bool operator == ( ZfsProperty<T> left, ZfsProperty<int> right ) => left.Equals ( right );
+
+  public static bool operator == ( ZfsProperty<T> left, ZfsProperty<string> right ) => left.Equals ( right );
+
+  public static bool operator == ( ZfsProperty<T> left, ZfsProperty<DateTimeOffset> right ) => left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, bool right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, int right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, string right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, DateTimeOffset right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, ZfsProperty<bool> right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, ZfsProperty<int> right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, ZfsProperty<string> right ) => !left.Equals ( right );
+
+  public static bool operator != ( ZfsProperty<T> left, ZfsProperty<DateTimeOffset> right ) => !left.Equals ( right );
 }
