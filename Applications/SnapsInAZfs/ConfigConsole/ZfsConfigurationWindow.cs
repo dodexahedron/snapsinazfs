@@ -664,7 +664,7 @@ public sealed partial class ZfsConfigurationWindow
           switch ( inheritPropertiesResult )
           {
             case ZfsCommandRunnerOperationStatus.Success:
-              Logger.Info ( "DRY RUN: Pretending all requested properties were inherited successfully for {0}", zfsObjectPath );
+              Logger.Info ( "Inherit properties operation successful for {0}", zfsObjectPath );
               break;
             case ZfsCommandRunnerOperationStatus.DryRun:
               Logger.Info ( "DRY RUN: Pretending all requested properties were inherited successfully for {0}", zfsObjectPath );
