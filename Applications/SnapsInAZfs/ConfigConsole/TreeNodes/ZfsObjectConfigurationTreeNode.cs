@@ -423,7 +423,7 @@ public sealed class ZfsObjectConfigurationTreeNode : TreeNode
                 return false;
             }
 
-            inheritedProperties = _inheritedPropertiesSinceLastSave.Values.ToList( );
+            inheritedProperties = [ .. _inheritedPropertiesSinceLastSave.Values ];
             return true;
         }
     }
@@ -441,7 +441,7 @@ public sealed class ZfsObjectConfigurationTreeNode : TreeNode
                 return false;
             }
 
-            modifiedProperties = _modifiedPropertiesSinceLastSave.Values.ToList( );
+            modifiedProperties = [ .. _modifiedPropertiesSinceLastSave.Values ];
             return true;
         }
     }

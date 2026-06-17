@@ -99,15 +99,17 @@ public static class TypeExtensions
     /// </exception>
     [Pure]
     [SuppressMessage( "ReSharper", "ExceptionNotDocumentedOptional", Justification = "The only other exceptions that can be thrown here are for setters that we do not use" )]
-    public static List<string> GetMonthNames( this DateTimeFormatInfo value )
+    public static IEnumerable<string> GetMonthNames( this DateTimeFormatInfo value )
     {
         ArgumentNullException.ThrowIfNull( value );
 
-        List<string> monthNamesList = [..value.MonthNames];
-        monthNamesList.AddRange( value.AbbreviatedMonthNames );
-        monthNamesList.AddRange( value.MonthGenitiveNames );
-        monthNamesList.AddRange( value.AbbreviatedMonthGenitiveNames );
-        return monthNamesList;
+        return
+        [
+          .. value.MonthNames,
+          .. value.AbbreviatedMonthNames,
+          .. value.MonthGenitiveNames,
+          .. value.AbbreviatedMonthGenitiveNames
+        ];
     }
 
     /// <summary>
