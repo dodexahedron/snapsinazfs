@@ -75,8 +75,11 @@ public static class TypeExtensions
             throw new InvalidOperationException( "Invalid AbbreviatedDayNames collection in DateTimeFormatInfo object" );
         }
 
-        List<string> dayNamesList = [..value.DayNames];
-        dayNamesList.AddRange( value.AbbreviatedDayNames );
+        List<string> dayNamesList =
+        [
+          .. value.DayNames,
+          .. value.AbbreviatedDayNames
+        ];
         return dayNamesList;
     }
 
