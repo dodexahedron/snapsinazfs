@@ -257,12 +257,15 @@ public partial record ZfsRecord : IComparable<ZfsRecord>, IEqualityOperators<Zfs
     private long PercentBytesUsed => BytesUsed * 100 / BytesAvailable;
 
     /// <inheritdoc/>
+    /// <remarks>
+    ///   This is an ordinal string comparison on <see cref="Name"/> ONLY.<br/>
+    ///   No other members are considered for the result.
+    /// </remarks>
     public int CompareTo ( ZfsRecord? other )
     {
-        // If the other snapshot is null, consider this record earlier rank
-        if ( other is null )
-        {
-            return -1;
+      if ( other is null )
+      {
+        return -1;
         }
 
         return string.Compare ( Name, other.Name, StringComparison.Ordinal );

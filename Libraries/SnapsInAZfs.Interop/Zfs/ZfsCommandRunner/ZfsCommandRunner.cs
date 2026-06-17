@@ -489,37 +489,35 @@ public sealed class ZfsCommandRunner : ZfsCommandRunnerBase, IZfsCommandRunner
             return ZfsCommandRunnerOperationStatus.DryRun;
         }
 
-        using ( Process zfsSetProcess = new( ) )
+        using Process zfsSetProcess = new( );
+        zfsSetProcess.StartInfo = zfsSetStartInfo;
+        Logger.Debug( "Calling {0} {1}", zfsSetStartInfo.FileName, zfsSetStartInfo.Arguments );
+        try
         {
-            zfsSetProcess.StartInfo = zfsSetStartInfo;
-            Logger.Debug( "Calling {0} {1}", zfsSetStartInfo.FileName, zfsSetStartInfo.Arguments );
-            try
-            {
-                zfsSetProcess.Start( );
-            }
-            catch ( InvalidOperationException ioex )
-            {
-                Logger.Error( ioex, "Error running zfs set operation. Exit status was {0:X8}", Marshal.GetLastSystemError( ) );
-                return ZfsCommandRunnerOperationStatus.ZfsProcessFailure;
-            }
-
-            if ( !zfsSetProcess.HasExited )
-            {
-                Logger.Trace( "Waiting for zfs set process to exit" );
-                try
-                {
-                    await zfsSetProcess.WaitForExitAsync( ).ConfigureAwait( false );
-                }
-                catch ( Exception ex )
-                {
-                    Logger.Error( ex, "Error running zfs set operation. Exit status was {0:X8}", Marshal.GetLastSystemError( ) );
-                    return ZfsCommandRunnerOperationStatus.ZfsProcessFailure;
-                }
-            }
-
-            Logger.Trace( "zfs set process finished" );
-            return ZfsCommandRunnerOperationStatus.Success;
+          zfsSetProcess.Start( );
         }
+        catch ( InvalidOperationException ioex )
+        {
+          Logger.Error( ioex, "Error running zfs set operation. Exit status was {0:X8}", Marshal.GetLastSystemError( ) );
+          return ZfsCommandRunnerOperationStatus.ZfsProcessFailure;
+        }
+
+        if ( !zfsSetProcess.HasExited )
+        {
+          Logger.Trace( "Waiting for zfs set process to exit" );
+          try
+          {
+            await zfsSetProcess.WaitForExitAsync( ).ConfigureAwait( false );
+          }
+          catch ( Exception ex )
+          {
+            Logger.Error( ex, "Error running zfs set operation. Exit status was {0:X8}", Marshal.GetLastSystemError( ) );
+            return ZfsCommandRunnerOperationStatus.ZfsProcessFailure;
+          }
+        }
+
+        Logger.Trace( "zfs set process finished" );
+        return ZfsCommandRunnerOperationStatus.Success;
     }
 
     private static void ValidateCommonExecArguments( string verb, string args )

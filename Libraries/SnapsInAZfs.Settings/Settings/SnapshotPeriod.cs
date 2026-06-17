@@ -1,5 +1,6 @@
 #region MIT LICENSE
-// Copyright 2023 Brandon Thetford
+
+// Copyright 2026 Brandon Thetford
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 // 
@@ -8,64 +9,65 @@
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // See https://opensource.org/license/MIT/
+
 #endregion
 
 namespace SnapsInAZfs.Settings.Settings;
 
 /// <summary>
-///     A class for extra convenience when dealing with the <see cref="SnapshotPeriodKind" /> enum
+///   A class for extra convenience when dealing with the <see cref="SnapshotPeriodKind" /> enum
 /// </summary>
 public sealed class SnapshotPeriod : IComparable<SnapshotPeriodKind>, IComparable<SnapshotPeriod>
 {
-    private readonly SnapshotPeriodKind _kind;
+  private readonly SnapshotPeriodKind _kind;
 
-    private SnapshotPeriod( SnapshotPeriodKind kind )
-    {
-        _kind = kind;
-    }
+  private SnapshotPeriod ( SnapshotPeriodKind kind )
+  {
+    _kind = kind;
+  }
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Daily" />
-    /// </summary>
-    public static SnapshotPeriod Daily { get; } = new( SnapshotPeriodKind.Daily );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Daily" />
+  /// </summary>
+  public static SnapshotPeriod Daily { get; } = new ( SnapshotPeriodKind.Daily );
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Frequent" />
-    /// </summary>
-    public static SnapshotPeriod Frequent { get; } = new( SnapshotPeriodKind.Frequent );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Frequent" />
+  /// </summary>
+  public static SnapshotPeriod Frequent { get; } = new ( SnapshotPeriodKind.Frequent );
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Hourly" />
-    /// </summary>
-    public static SnapshotPeriod Hourly { get; } = new( SnapshotPeriodKind.Hourly );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Hourly" />
+  /// </summary>
+  public static SnapshotPeriod Hourly { get; } = new ( SnapshotPeriodKind.Hourly );
 
-    /// <summary>
-    ///     Gets the <see cref="SnapshotPeriodKind" /> value for this object
-    /// </summary>
-    public ref readonly SnapshotPeriodKind Kind => ref _kind;
+  /// <summary>
+  ///   Gets the <see cref="SnapshotPeriodKind" /> value for this object
+  /// </summary>
+  public ref readonly SnapshotPeriodKind Kind => ref _kind;
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Monthly" />
-    /// </summary>
-    public static SnapshotPeriod Monthly { get; } = new( SnapshotPeriodKind.Monthly );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Monthly" />
+  /// </summary>
+  public static SnapshotPeriod Monthly { get; } = new ( SnapshotPeriodKind.Monthly );
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.NotSet" />
-    /// </summary>
-    public static SnapshotPeriod NotSet { get; } = new( SnapshotPeriodKind.NotSet );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.NotSet" />
+  /// </summary>
+  public static SnapshotPeriod NotSet { get; } = new ( SnapshotPeriodKind.NotSet );
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Weekly" />
-    /// </summary>
-    public static SnapshotPeriod Weekly { get; } = new( SnapshotPeriodKind.Weekly );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Weekly" />
+  /// </summary>
+  public static SnapshotPeriod Weekly { get; } = new ( SnapshotPeriodKind.Weekly );
 
-    /// <summary>
-    ///     Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Yearly" />
-    /// </summary>
-    public static SnapshotPeriod Yearly { get; } = new( SnapshotPeriodKind.Yearly );
+  /// <summary>
+  ///   Gets a <see cref="SnapshotPeriod" /> with <see cref="Kind" /> pre-set to <see cref="SnapshotPeriodKind.Yearly" />
+  /// </summary>
+  public static SnapshotPeriod Yearly { get; } = new ( SnapshotPeriodKind.Yearly );
 
-    public const string DailyString = "daily";
-    public const string FrequentString = "frequently";
+  public const string DailyString = "daily";
+  public const string FrequentString = "frequently";
     public const string HourlyString = "hourly";
     public const string MonthlyString = "monthly";
     public const string NotSetString = "-";
