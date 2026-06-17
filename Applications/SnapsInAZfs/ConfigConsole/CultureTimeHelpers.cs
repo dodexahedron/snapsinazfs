@@ -26,25 +26,25 @@ public static class CultureTimeHelpers
     ///     Gets a <see cref="List{T}" /> of string values for all full day names for the current culture of the executing
     ///     thread
     /// </summary>
-    public static List<string> DayNamesLong { get; } = DateTimeFormatInfo.CurrentInfo.DayNames.Where( static m => !string.IsNullOrWhiteSpace( m ) ).ToList( );
+    public static List<string> DayNamesLong => field ??= [ .. DateTimeFormatInfo.CurrentInfo.DayNames.Where ( static m => !string.IsNullOrWhiteSpace ( m ) ) ];
 
     /// <summary>
     ///     Gets a <see cref="List{T}" /> of string values for all full and standard abbreviated day names for the current
     ///     culture of the executing thread
     /// </summary>
-    public static List<string> DayNamesLongAndAbbreviated { get; } = DateTimeFormatInfo.CurrentInfo.GetLongAndAbbreviatedDayNames( );
+    public static List<string> DayNamesLongAndAbbreviated => field ??= DateTimeFormatInfo.CurrentInfo.GetLongAndAbbreviatedDayNames( );
 
     /// <summary>
     ///     Gets a <see cref="List{T}" /> of string values for all full month names for the current culture of the executing
     ///     thread
     /// </summary>
-    public static List<string> MonthNamesLong { get; } = DateTimeFormatInfo.CurrentInfo.MonthNames.Where( static m => !string.IsNullOrWhiteSpace( m ) ).ToList( );
+    public static List<string> MonthNamesLong => field ??= [ .. DateTimeFormatInfo.CurrentInfo.MonthNames.Where ( static m => !string.IsNullOrWhiteSpace ( m ) ) ];
 
     /// <summary>
     ///     Gets a <see cref="List{T}" /> of string values for all full and standard abbreviated month names for the current
     ///     culture of the executing thread
     /// </summary>
-    public static List<string> MonthNamesLongAndAbbreviated { get; } = DateTimeFormatInfo.CurrentInfo.GetMonthNames( );
+    private static List<string> MonthNamesLongAndAbbreviated => field ??= DateTimeFormatInfo.CurrentInfo.GetMonthNames ( );
 
     /// <summary>
     ///     Gets the month number of this <see cref="DateTime" />, for the current culture of the executing thread.
