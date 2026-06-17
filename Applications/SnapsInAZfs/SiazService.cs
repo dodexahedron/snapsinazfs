@@ -18,6 +18,7 @@ using SnapsInAZfs.Interop.Libc.Enums;
 using SnapsInAZfs.Interop.Zfs.ZfsCommandRunner;
 using SnapsInAZfs.Interop.Zfs.ZfsTypes;
 using SnapsInAZfs.Monitoring;
+using SnapsInAZfs.Serialization;
 using SnapsInAZfs.Settings.Settings;
 
 namespace SnapsInAZfs;
@@ -650,7 +651,7 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
             }
         }
 
-        Logger.ConditionalDebug( "{0} {1} will have a {2} snapshot taken with these settings: {3}", ds.Kind, ds.Name, period, JsonSerializer.Serialize( new { ds.Template, ds.Recursion } ) );
+        Logger.ConditionalDebug( "{0} {1} will have a {2} snapshot taken with these settings: {3}", ds.Kind, ds.Name, period, JsonSerializer.Serialize(new TemplateRecursionPair(ds.Template, ds.Recursion)) );
 
         ZfsCommandRunnerOperationStatus zfsCommandRunnerStatus = _zfsCommandRunner.TakeSnapshot( ds, period, in timestamp, _settings, template.Formatting, out snapshot );
         switch ( zfsCommandRunnerStatus )
@@ -691,7 +692,7 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
 
             // It's not a nullable type...
             // ReSharper disable once ExceptionNotDocumentedOptional
-            string[] propertyArray = propertiesToAdd.Where( static kvp => !kvp.Value ).Select( static kvp => kvp.Key ).ToArray( );
+            string[] propertyArray = [ .. propertiesToAdd.Where ( static kvp => !kvp.Value ).Select ( static kvp => kvp.Key ) ];
 
             if ( propertyArray.Length == 0 )
             {
@@ -709,12 +710,12 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
             {
                 if ( settings.DryRun )
                 {
-                    Logger.Info( "DRY RUN: Properties intentionally not set for {0}: {1}", poolName, JsonSerializer.Serialize( propertyArray ) );
+                    Logger.Info( "DRY RUN: Properties intentionally not set for {0}: {1}", poolName, JsonSerializer.Serialize( propertyArray, LoggingSerializationContext.Default.StringArray ) );
                 }
                 else
                 {
                     errorsEncountered = true;
-                    Logger.Error( "Failed updating properties for pool {0}. Unset properties: {1}", poolName, JsonSerializer.Serialize( propertyArray ) );
+                    Logger.Error ( "Failed updating properties for pool {0}. Unset properties: {1}", poolName, JsonSerializer.Serialize ( propertyArray, LoggingSerializationContext.Default.StringArray ) );
                 }
             }
         }
@@ -740,7 +741,7 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
                 return SiazExecutionResultCode.CancelledByToken;
             }
 
-            Logger.Debug( "Using Settings: {0}", JsonSerializer.Serialize( _settings ) );
+            Logger.Debug( "Using Settings: {0}", JsonSerializer.Serialize( _settings, SnapsInAZfsSettingsSerializationContext.Default.SnapsInAZfsSettings ) );
 
             if ( cancellationToken.IsCancellationRequested )
             {
@@ -751,7 +752,7 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
             CheckZfsPropertiesSchemaResult schemaCheckResult = await CheckZfsPoolRootPropertiesSchemaAsync( zfsCommandRunner, args ).ConfigureAwait( true );
             State = ApplicationState.Executing;
 
-            Logger.ConditionalTrace( "Result of schema check is: {0}", JsonSerializer.Serialize( schemaCheckResult ) );
+            Logger.ConditionalTrace( "Result of schema check is: {0}", JsonSerializer.Serialize( schemaCheckResult, LoggingSerializationContext.Default.CheckZfsPropertiesSchemaResult ) );
 
             if ( cancellationToken.IsCancellationRequested )
             {
@@ -895,7 +896,9 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
         NextRunTimeChanged?.Invoke( this, nextRunTime.ToUnixTimeMilliseconds( ) );
     }
 
-    private sealed record CheckZfsPropertiesSchemaResult( ConcurrentDictionary<string, ConcurrentDictionary<string, bool>> PoolRootsWithPropertyValidities, bool MissingPropertiesFound );
+    internal sealed record CheckZfsPropertiesSchemaResult( ConcurrentDictionary<string, ConcurrentDictionary<string, bool>> PoolRootsWithPropertyValidities, bool MissingPropertiesFound );
+
+    internal sealed record TemplateRecursionPair ( ZfsProperty<string> Template, ZfsProperty<string> Recursion );
 
     // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
     private readonly ISnapshotOperationsObserver? _snapshotOperationsObserver;
@@ -903,3 +906,4 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
     private readonly IApplicationStateObserver? _stateObserver;
     // ReSharper restore PrivateFieldCanBeConvertedToLocalVariable
 }
+
