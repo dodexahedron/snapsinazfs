@@ -266,9 +266,9 @@ public partial record ZfsRecord : IComparable<ZfsRecord>, IEqualityOperators<Zfs
       if ( other is null )
       {
         return -1;
-        }
+      }
 
-        return string.Compare ( Name, other.Name, StringComparison.Ordinal );
+      return string.Compare ( Name, other.Name, StringComparison.Ordinal );
     }
 
     /// <inheritdoc/>
@@ -315,6 +315,18 @@ public partial record ZfsRecord : IComparable<ZfsRecord>, IEqualityOperators<Zfs
      && Template                              == other.Template
      && SnapshotCount                         == other.SnapshotCount
      && ChildDatasetCount                     == other.ChildDatasetCount;
+
+    /// <remarks>Value inequality uses the rules of <see cref="CompareTo"/>.</remarks>
+    public static bool operator > ( ZfsRecord left, ZfsRecord right ) => left.CompareTo ( right ) > 0;
+
+    /// <remarks>Value inequality uses the rules of <see cref="CompareTo"/>.</remarks>
+    public static bool operator < ( ZfsRecord left, ZfsRecord right ) => left.CompareTo ( right ) < 0;
+
+    /// <remarks>Value inequality uses the rules of <see cref="CompareTo"/>.</remarks>
+    public static bool operator >= ( ZfsRecord left, ZfsRecord right ) => left.CompareTo ( right ) >= 0;
+
+    /// <remarks>Value inequality uses the rules of <see cref="CompareTo"/>.</remarks>
+    public static bool operator <= ( ZfsRecord left, ZfsRecord right ) => left.CompareTo ( right ) <= 0;
 
     /// <summary>
     ///     Adds a <see cref="ZfsRecord"/> as an immediate descendant of the current <see cref="ZfsRecord"/> and subscribes the

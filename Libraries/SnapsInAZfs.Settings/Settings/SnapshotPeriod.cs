@@ -68,137 +68,138 @@ public sealed class SnapshotPeriod : IComparable<SnapshotPeriodKind>, IComparabl
 
   public const string DailyString = "daily";
   public const string FrequentString = "frequently";
-    public const string HourlyString = "hourly";
-    public const string MonthlyString = "monthly";
-    public const string NotSetString = "-";
-    public const string WeeklyString = "weekly";
-    public const string YearlyString = "yearly";
+  public const string HourlyString = "hourly";
+  public const string MonthlyString = "monthly";
+  public const string NotSetString = "-";
+  public const string WeeklyString = "weekly";
+  public const string YearlyString = "yearly";
 
-    /// <inheritdoc />
-    public int CompareTo( SnapshotPeriod? other )
+  /// <inheritdoc />
+  public int CompareTo ( SnapshotPeriod? other ) => other is null ? 1 : CompareTo ( other.Kind );
+
+  /// <inheritdoc />
+  public int CompareTo ( SnapshotPeriodKind other ) => Kind - other;
+
+  public static int Compare ( SnapshotPeriod? x, SnapshotPeriod? y )
+  {
+    return ( x, y ) switch
+           {
+             (null, null) => 0,
+             (null, _)    => -1,
+             (_, null)    => 1,
+             _            => x.CompareTo ( y )
+           };
+  }
+
+  /// <inheritdoc />
+  public override bool Equals ( object? obj )
+  {
+    if ( obj is not SnapshotPeriod other )
     {
-        return other is null ? 1 : CompareTo( other.Kind );
+      return false;
     }
 
-    /// <inheritdoc />
-    public int CompareTo( SnapshotPeriodKind other )
+    if ( ReferenceEquals ( this, obj ) )
     {
-        return Kind - other;
+      return true;
     }
 
-    public static int Compare( SnapshotPeriod? x, SnapshotPeriod? y )
-    {
-        return x switch
-        {
-            null when y is null => 0,
-            null => -1,
-            _ => x.CompareTo( y )
-        };
-    }
+    return Kind == other.Kind;
+  }
 
-    /// <inheritdoc />
-    public override bool Equals( object? obj )
-    {
-        if ( obj is not SnapshotPeriod other )
-        {
-            return false;
-        }
+  public bool Equals ( SnapshotPeriod other ) => this == other;
 
-        if ( ReferenceEquals( this, obj ) )
-        {
-            return true;
-        }
+  /// <inheritdoc />
+  public override int GetHashCode ( ) => (int)Kind;
 
-        return Kind == other.Kind;
-    }
+  public static SnapshotPeriodKind StringToSnapshotPeriodKind ( string value )
+  {
+    return value switch
+           {
+             FrequentString => SnapshotPeriodKind.Frequent,
+             HourlyString   => SnapshotPeriodKind.Hourly,
+             DailyString    => SnapshotPeriodKind.Daily,
+             WeeklyString   => SnapshotPeriodKind.Weekly,
+             MonthlyString  => SnapshotPeriodKind.Monthly,
+             YearlyString   => SnapshotPeriodKind.Yearly,
+             NotSetString   => SnapshotPeriodKind.NotSet,
+             _              => throw new FormatException ( $"{value} is not a valid SnapshotPeriodKind value" )
+           };
+  }
 
-    public bool Equals( SnapshotPeriod other )
-    {
-        return Kind == other.Kind;
-    }
+  /// <inheritdoc />
+  public override string ToString ( ) => this;
 
-    /// <inheritdoc />
-    public override int GetHashCode( )
-    {
-        return (int)Kind;
-    }
+  [MethodImpl ( MethodImplOptions.AggressiveInlining )]
+  public static bool operator == ( SnapshotPeriod left, SnapshotPeriod right ) => left._kind == right._kind;
 
-    /// <summary>
-    ///     Explicit conversion from <see langword="string" /> to <see cref="SnapshotPeriod" />
-    /// </summary>
-    /// <param name="value"></param>
-    public static explicit operator SnapshotPeriod( string value )
-    {
-        return value switch
-        {
-            FrequentString => Frequent,
-            HourlyString => Hourly,
-            DailyString => Daily,
-            WeeklyString => Weekly,
-            MonthlyString => Monthly,
-            YearlyString => Yearly,
-            NotSetString => NotSet,
-            _ => throw new FormatException( $"{value} is not a valid SnapshotPeriod value" )
-        };
-    }
+  /// <summary>
+  ///   Explicit conversion from <see langword="string" /> to <see cref="SnapshotPeriod" />
+  /// </summary>
+  /// <param name="value"></param>
+  public static explicit operator SnapshotPeriod ( string value )
+  {
+    return value switch
+           {
+             FrequentString => Frequent,
+             HourlyString   => Hourly,
+             DailyString    => Daily,
+             WeeklyString   => Weekly,
+             MonthlyString  => Monthly,
+             YearlyString   => Yearly,
+             NotSetString   => NotSet,
+             _              => throw new FormatException ( $"{value} is not a valid SnapshotPeriod value" )
+           };
+  }
 
-    public static SnapshotPeriodKind StringToSnapshotPeriodKind( string value )
-    {
-        return value switch
-        {
-            FrequentString => SnapshotPeriodKind.Frequent,
-            HourlyString => SnapshotPeriodKind.Hourly,
-            DailyString => SnapshotPeriodKind.Daily,
-            WeeklyString => SnapshotPeriodKind.Weekly,
-            MonthlyString => SnapshotPeriodKind.Monthly,
-            YearlyString => SnapshotPeriodKind.Yearly,
-            NotSetString => SnapshotPeriodKind.NotSet,
-            _ => throw new FormatException( $"{value} is not a valid SnapshotPeriodKind value" )
-        };
-    }
+  [MethodImpl ( MethodImplOptions.AggressiveInlining )]
+  public static bool operator > ( SnapshotPeriod left, SnapshotPeriod right ) => left.CompareTo ( right ) > 0;
 
-    /// <inheritdoc />
-    public override string ToString( )
-    {
-        return this;
-    }
+  [MethodImpl ( MethodImplOptions.AggressiveInlining )]
+  public static bool operator >= ( SnapshotPeriod left, SnapshotPeriod right ) => left.CompareTo ( right ) >= 0;
 
-    /// <summary>
-    ///     Implicit or explicit conversion to <see langword="string" />, for the given <see cref="SnapshotPeriod" /> object
-    /// </summary>
-    /// <param name="self"></param>
+  [MethodImpl ( MethodImplOptions.AggressiveInlining )]
+  public static bool operator != ( SnapshotPeriod left, SnapshotPeriod right ) => !( left == right );
+
+  [MethodImpl ( MethodImplOptions.AggressiveInlining )]
+  public static bool operator < ( SnapshotPeriod left, SnapshotPeriod right ) => left.CompareTo ( right ) < 0;
+
+  [MethodImpl ( MethodImplOptions.AggressiveInlining )]
+  public static bool operator <= ( SnapshotPeriod left, SnapshotPeriod right ) => left.CompareTo ( right ) <= 0;
+
+  /// <summary>
+  ///   Implicit or explicit conversion to <see langword="string" />, for the given <see cref="SnapshotPeriod" /> object
+  /// </summary>
+  /// <param name="self"></param>
 #pragma warning disable CS8524
-    public static implicit operator string( SnapshotPeriod self )
-    {
-        return self.Kind switch
-        {
-            SnapshotPeriodKind.Frequent => FrequentString,
-            SnapshotPeriodKind.Hourly => HourlyString,
-            SnapshotPeriodKind.Daily => DailyString,
-            SnapshotPeriodKind.Weekly => WeeklyString,
-            SnapshotPeriodKind.Monthly => MonthlyString,
-            SnapshotPeriodKind.Yearly => YearlyString,
-            SnapshotPeriodKind.NotSet => NotSetString
-        };
-    }
+  public static implicit operator string ( SnapshotPeriod self )
+  {
+    return self.Kind switch
+           {
+             SnapshotPeriodKind.Frequent => FrequentString,
+             SnapshotPeriodKind.Hourly   => HourlyString,
+             SnapshotPeriodKind.Daily    => DailyString,
+             SnapshotPeriodKind.Weekly   => WeeklyString,
+             SnapshotPeriodKind.Monthly  => MonthlyString,
+             SnapshotPeriodKind.Yearly   => YearlyString,
+             SnapshotPeriodKind.NotSet   => NotSetString
+           };
+  }
 
-    public static explicit operator SnapshotPeriodKind( SnapshotPeriod self )
-    {
-        return self.Kind;
-    }
+  public static explicit operator SnapshotPeriodKind ( SnapshotPeriod self ) => self.Kind;
 
-    public static implicit operator SnapshotPeriod( SnapshotPeriodKind kind )
-    {
-        return kind switch
-        {
-            SnapshotPeriodKind.Frequent => Frequent,
-            SnapshotPeriodKind.Hourly => Hourly,
-            SnapshotPeriodKind.Daily => Daily,
-            SnapshotPeriodKind.Weekly => Weekly,
-            SnapshotPeriodKind.Monthly => Monthly,
-            SnapshotPeriodKind.Yearly => Yearly,
-            SnapshotPeriodKind.NotSet => NotSet
-        };
-    }
+  public static implicit operator SnapshotPeriod ( SnapshotPeriodKind kind )
+  {
+    return kind switch
+           {
+             SnapshotPeriodKind.Frequent => Frequent,
+             SnapshotPeriodKind.Hourly   => Hourly,
+             SnapshotPeriodKind.Daily    => Daily,
+             SnapshotPeriodKind.Weekly   => Weekly,
+             SnapshotPeriodKind.Monthly  => Monthly,
+             SnapshotPeriodKind.Yearly   => Yearly,
+             SnapshotPeriodKind.NotSet   => NotSet
+           };
+  }
 #pragma warning restore CS8524
 }
