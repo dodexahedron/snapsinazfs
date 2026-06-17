@@ -85,7 +85,7 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
     /// </summary>
     public static int ExitStatus { get; } = (int)Errno.EOK;
 
-    internal static SiazExecutionResultCode LastExecutionResultCode = SiazExecutionResultCode.None;
+    private static SiazExecutionResultCode _lastExecutionResultCode = SiazExecutionResultCode.None;
 
     internal static DateTimeOffset Timestamp;
 
@@ -219,8 +219,8 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
 
         // Run once, unconditionally
         // Afterward, only continue if we're running as a daemon, stop hasn't been requested, and there wasn't an error.
-        LastExecutionResultCode = await ExecuteSiazAsync( _zfsCommandRunner, _commandLineArguments, Timestamp, serviceCancellationToken ).ConfigureAwait( true );
-        if ( !_settings.Daemonize || serviceCancellationToken.IsCancellationRequested || LastExecutionResultCode is not SiazExecutionResultCode.Completed )
+        _lastExecutionResultCode = await ExecuteSiazAsync( _zfsCommandRunner, _commandLineArguments, Timestamp, serviceCancellationToken ).ConfigureAwait( true );
+        if ( !_settings.Daemonize || serviceCancellationToken.IsCancellationRequested || _lastExecutionResultCode is not SiazExecutionResultCode.Completed )
         {
             State = ApplicationState.Terminating;
             serviceCancellationToken.ThrowIfCancellationRequested( );
@@ -292,8 +292,8 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
                         SetNextRunTime( in greatestCommonFrequentIntervalMinutes, in Timestamp, in _lastRunTime, out _nextRunTime );
 
                         // Fire this off asynchronously
-                        LastExecutionResultCode = await ExecuteSiazAsync( _zfsCommandRunner, _commandLineArguments, Timestamp, serviceCancellationToken ).ConfigureAwait( true );
-                        if ( LastExecutionResultCode is SiazExecutionResultCode.CancelledByToken or SiazExecutionResultCode.ZfsPropertyCheck_MissingProperties_Fatal or SiazExecutionResultCode.ZfsPropertyUpdate_Failed )
+                        _lastExecutionResultCode = await ExecuteSiazAsync( _zfsCommandRunner, _commandLineArguments, Timestamp, serviceCancellationToken ).ConfigureAwait( true );
+                        if ( _lastExecutionResultCode is SiazExecutionResultCode.CancelledByToken or SiazExecutionResultCode.ZfsPropertyCheck_MissingProperties_Fatal or SiazExecutionResultCode.ZfsPropertyUpdate_Failed )
                         {
                             await StopAsync( serviceCancellationToken ).ConfigureAwait( true );
                         }
