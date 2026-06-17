@@ -1,4 +1,4 @@
-﻿#region MIT LICENSE
+#region MIT LICENSE
 
 // Copyright 2023 Brandon Thetford
 // 
@@ -12,6 +12,7 @@
 
 #endregion
 
+using System.Globalization;
 using SnapsInAZfs.Settings.Settings;
 
 namespace SnapsInAZfs.Settings.Tests.Settings;
@@ -26,11 +27,12 @@ public class FormattingSettingsTests
     public void GenerateShortSnapshotName_ReturnsExpectedValue( [Values( SnapshotPeriodKind.Frequent, SnapshotPeriodKind.Hourly, SnapshotPeriodKind.Daily, SnapshotPeriodKind.Weekly, SnapshotPeriodKind.Monthly, SnapshotPeriodKind.Yearly )] SnapshotPeriodKind period, [ValueSource( nameof( GetTimestampsForFormatTests ) )] DateTimeOffset timestamp )
     {
         FormattingSettings testFormattingSettings = FormattingSettings.GetDefault( );
+        Assume.That ( testFormattingSettings, Is.Not.Null );
         string shortName = testFormattingSettings.GenerateShortSnapshotName( in period, in timestamp );
         Assert.That( shortName, Is.Not.Null );
         Assert.That( shortName, Is.Not.Empty );
 #pragma warning disable CS8509 // We don't care about the NotSet value for this test
-        Assert.That( shortName, Is.EqualTo( $"{testFormattingSettings.Prefix}{testFormattingSettings.ComponentSeparator}{timestamp.ToString( testFormattingSettings.TimestampFormatString )}{testFormattingSettings.ComponentSeparator}{period switch
+        Assert.That( shortName, Is.EqualTo( $"{testFormattingSettings.Prefix}{testFormattingSettings.ComponentSeparator}{timestamp.ToString( testFormattingSettings.TimestampFormatString, DateTimeFormatInfo.InvariantInfo )}{testFormattingSettings.ComponentSeparator}{period switch
         {
             SnapshotPeriodKind.Frequent => testFormattingSettings.FrequentSuffix,
             SnapshotPeriodKind.Hourly => testFormattingSettings.HourlySuffix,
@@ -43,23 +45,24 @@ public class FormattingSettingsTests
     }
 
     [Test]
-    public void GenerateShortSnapshotName_ThrowsOnBadTimestampFormatString( )
+    public void GenerateShortSnapshotName_ThrowsOnBadTimestampFormatString( [ValueSource( nameof( GetTimestampsForFormatTests ) )] DateTimeOffset timestamp )
     {
         FormattingSettings testFormattingSettings = FormattingSettings.GetDefault( ) with { TimestampFormatString = "a" };
-        Assert.That( ( ) => testFormattingSettings.GenerateShortSnapshotName( SnapshotPeriodKind.Frequent, DateTimeOffset.UnixEpoch ), Throws.TypeOf<FormatException>( ) );
+        Assert.That( ( ) => testFormattingSettings.GenerateShortSnapshotName( SnapshotPeriodKind.Frequent, timestamp ), Throws.TypeOf<FormatException>( ) );
     }
 
     [Test]
-    [Combinatorial]
-    public void GenerateShortSnapshotName_ThrowsOnInvalidPeriod( )
+    public void GenerateShortSnapshotName_ThrowsOnInvalidPeriod ( [Values ( SnapshotPeriodKind.NotSet, -1 )] SnapshotPeriodKind period, [ValueSource( nameof( GetTimestampsForFormatTests ) )] DateTimeOffset timestamp )
     {
-        FormattingSettings testFormattingSettings = FormattingSettings.GetDefault( );
-        Assert.That( ( ) => testFormattingSettings.GenerateShortSnapshotName( SnapshotPeriodKind.NotSet, DateTimeOffset.UnixEpoch ), Throws.TypeOf<ArgumentOutOfRangeException>( ) );
+      FormattingSettings testFormattingSettings = FormattingSettings.GetDefault ( );
+      Assert.That ( ( ) => testFormattingSettings.GenerateShortSnapshotName ( period, DateTimeOffset.UnixEpoch ), Throws.TypeOf<ArgumentOutOfRangeException> ( ) );
     }
 
     private static IEnumerable<DateTimeOffset> GetTimestampsForFormatTests( )
     {
         yield return DateTimeOffset.UnixEpoch;
-        yield return new( 2023, 8, 1, 1, 0, 0, TimeZoneInfo.Local.BaseUtcOffset );
+        yield return new ( 2023, 8, 1, 1, 0, 0, TimeZoneInfo.Local.BaseUtcOffset );
+        yield return new ( 2026, 6, 17, 3, 27, 0, TimeSpan.Zero );
+        yield return new ( 2026, 6, 16, 20, 27, 0, TimeSpan.FromHours ( -7 ) );
     }
 }
