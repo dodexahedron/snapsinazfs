@@ -12,7 +12,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using NStack;
 
 namespace SnapsInAZfs.ConfigConsole;
 
@@ -28,11 +27,11 @@ public static class CultureTimeHelpers
     /// </summary>
     public static List<string> DayNamesLong => field ??= [ .. DateTimeFormatInfo.CurrentInfo.DayNames.Where ( static m => !string.IsNullOrWhiteSpace ( m ) ) ];
 
-    /// <summary>
-    ///     Gets a <see cref="List{T}" /> of string values for all full and standard abbreviated day names for the current
-    ///     culture of the executing thread
-    /// </summary>
-    public static List<string> DayNamesLongAndAbbreviated => field ??= DateTimeFormatInfo.CurrentInfo.GetLongAndAbbreviatedDayNames( );
+    ///// <summary>
+    /////     Gets a <see cref="List{T}" /> of string values for all full and standard abbreviated day names for the current
+    /////     culture of the executing thread
+    ///// </summary>
+    //public static List<string> DayNamesLongAndAbbreviated => field ??= DateTimeFormatInfo.CurrentInfo.GetLongAndAbbreviatedDayNames( );
 
     /// <summary>
     ///     Gets a <see cref="List{T}" /> of string values for all full month names for the current culture of the executing
@@ -40,66 +39,66 @@ public static class CultureTimeHelpers
     /// </summary>
     public static List<string> MonthNamesLong => field ??= [ .. DateTimeFormatInfo.CurrentInfo.MonthNames.Where ( static m => !string.IsNullOrWhiteSpace ( m ) ) ];
 
-    /// <summary>
-    ///     Gets a <see cref="List{T}" /> of string values for all full and standard abbreviated month names for the current
-    ///     culture of the executing thread
-    /// </summary>
-    private static List<string> MonthNamesLongAndAbbreviated => field ??= [ .. DateTimeFormatInfo.CurrentInfo.GetMonthNames ( ) ];
+    ///// <summary>
+    /////     Gets a <see cref="List{T}" /> of string values for all full and standard abbreviated month names for the current
+    /////     culture of the executing thread
+    ///// </summary>
+    //private static List<string> MonthNamesLongAndAbbreviated => field ??= [ .. DateTimeFormatInfo.CurrentInfo.GetMonthNames ( ) ];
 
-    /// <summary>
-    ///     Gets the month number of this <see cref="DateTime" />, for the current culture of the executing thread.
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns>
-    ///     A 1-based <see langword="int" /> value for the month of <paramref name="value" />, according to the
-    ///     <see cref="Calendar" /> of <see cref="CultureInfo.CurrentCulture" />
-    /// </returns>
-    public static int GetCalendarMonth( this DateTime value )
-    {
-        return CultureInfo.CurrentCulture.Calendar.GetMonth( value );
-    }
+    ///// <summary>
+    /////     Gets the month number of this <see cref="DateTime" />, for the current culture of the executing thread.
+    ///// </summary>
+    ///// <param name="value"></param>
+    ///// <returns>
+    /////     A 1-based <see langword="int" /> value for the month of <paramref name="value" />, according to the
+    /////     <see cref="Calendar" /> of <see cref="CultureInfo.CurrentCulture" />
+    ///// </returns>
+    //public static int GetCalendarMonth( this DateTime value )
+    //{
+    //    return CultureInfo.CurrentCulture.Calendar.GetMonth( value );
+    //}
 
-    /// <summary>
-    ///     Gets the name of the month with the specified <paramref name="value" />
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns>
-    ///     A <see langword="string" /> containing the name of the month corresponding to <paramref name="value" />,
-    ///     according to <see cref="DateTimeFormatInfo.CurrentInfo" />
-    /// </returns>
-    public static string GetCalendarMonth( int value )
-    {
-        return DateTimeFormatInfo.CurrentInfo.GetMonthName( value );
-    }
+    ///// <summary>
+    /////     Gets the name of the month with the specified <paramref name="value" />
+    ///// </summary>
+    ///// <param name="value"></param>
+    ///// <returns>
+    /////     A <see langword="string" /> containing the name of the month corresponding to <paramref name="value" />,
+    /////     according to <see cref="DateTimeFormatInfo.CurrentInfo" />
+    ///// </returns>
+    //public static string GetCalendarMonth( int value )
+    //{
+    //    return DateTimeFormatInfo.CurrentInfo.GetMonthName( value );
+    //}
 
-    /// <summary>
-    ///     Gets the month number of the given <see cref="ustring" /> as its index in the
-    ///     <see cref="MonthNamesLongAndAbbreviated" /> collection + 1
-    /// </summary>
-    /// <param name="ustringValue"></param>
-    /// <returns>
-    ///     An <see langword="int" /> value for the month
-    /// </returns>
-    public static int GetCalendarMonth( this ustring ustringValue )
-    {
-        string stringValue = ustringValue.ToString( )!;
-        return MonthNamesLongAndAbbreviated.IndexOf( stringValue ) + 1;
-    }
+    ///// <summary>
+    /////     Gets the month number of the given <see cref="ustring" /> as its index in the
+    /////     <see cref="MonthNamesLongAndAbbreviated" /> collection + 1
+    ///// </summary>
+    ///// <param name="ustringValue"></param>
+    ///// <returns>
+    /////     An <see langword="int" /> value for the month
+    ///// </returns>
+    //public static int GetCalendarMonth( this ustring ustringValue )
+    //{
+    //    string stringValue = ustringValue.ToString( )!;
+    //    return MonthNamesLongAndAbbreviated.IndexOf( stringValue ) + 1;
+    //}
 
-    /// <summary>
-    ///     Gets the month number of this <see cref="DateTimeOffset" />, for the current culture of the executing thread.
-    /// </summary>
-    /// <param name="value"></param>
-    /// <param name="useLocalTime">
-    ///     An optional <see langword="bool" /> indicating whether to use local time (true - default) or
-    ///     not (false)
-    /// </param>
-    /// <returns>
-    ///     A 1-based <see langword="int" /> value for the month of <paramref name="value" />, according to the
-    ///     <see cref="Calendar" /> of <see cref="CultureInfo.CurrentCulture" />
-    /// </returns>
-    public static int GetCalendarMonth( this DateTimeOffset value, bool useLocalTime = true )
-    {
-        return CultureInfo.CurrentCulture.Calendar.GetMonth( useLocalTime ? value.LocalDateTime : value.UtcDateTime );
-    }
+    ///// <summary>
+    /////     Gets the month number of this <see cref="DateTimeOffset" />, for the current culture of the executing thread.
+    ///// </summary>
+    ///// <param name="value"></param>
+    ///// <param name="useLocalTime">
+    /////     An optional <see langword="bool" /> indicating whether to use local time (true - default) or
+    /////     not (false)
+    ///// </param>
+    ///// <returns>
+    /////     A 1-based <see langword="int" /> value for the month of <paramref name="value" />, according to the
+    /////     <see cref="Calendar" /> of <see cref="CultureInfo.CurrentCulture" />
+    ///// </returns>
+    //public static int GetCalendarMonth( this DateTimeOffset value, bool useLocalTime = true )
+    //{
+    //    return CultureInfo.CurrentCulture.Calendar.GetMonth( useLocalTime ? value.LocalDateTime : value.UtcDateTime );
+    //}
 }
