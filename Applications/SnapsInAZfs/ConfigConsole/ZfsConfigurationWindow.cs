@@ -1037,6 +1037,8 @@ public sealed partial class ZfsConfigurationWindow
 
     private async void ZfsConfigurationWindowOnInitialized( object? sender, EventArgs e )
     {
+      try
+      {
         Logger.Trace( "Zfs Configuration Window initialized" );
         ConfiguredTaskAwaitable zfsRefreshTask = RefreshZfsTreeViewFromZfsAsync( ).ConfigureAwait( true );
         await templateListView.SetSourceAsync( ConfigConsole.TemplateListItems ).ConfigureAwait(true);
@@ -1047,6 +1049,11 @@ public sealed partial class ZfsConfigurationWindow
         await zfsRefreshTask;
         UpdateButtonState( );
         EnableEventHandlers( );
+      }
+      catch ( Exception ex )
+      {
+        Logger.Error ( ex );
+      }
     }
 
     private void zfsTreeViewOnSelectionChanged( object? sender, SelectionChangedEventArgs<ITreeNode> e )
