@@ -13,6 +13,7 @@
 #endregion
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.Json.Serialization;
 
 namespace SnapsInAZfs.Settings.Settings;
@@ -98,16 +99,22 @@ public sealed record FormattingSettings
         // String interpolation of all string values is the most efficient way to do this.
         // This warning is only relevant if something in the interpolation isn't a string by the time it is evaluated.
         // ReSharper disable once HeapView.ObjectAllocation
-        return $"{Prefix}{ComponentSeparator}{timestamp.ToString( TimestampFormatString )}{ComponentSeparator}{periodKind switch
-        {
-            SnapshotPeriodKind.Frequent => FrequentSuffix,
-            SnapshotPeriodKind.Hourly => HourlySuffix,
-            SnapshotPeriodKind.Daily => DailySuffix,
-            SnapshotPeriodKind.Weekly => WeeklySuffix,
-            SnapshotPeriodKind.Monthly => MonthlySuffix,
-            SnapshotPeriodKind.Yearly => YearlySuffix,
-            _ => throw new ArgumentOutOfRangeException( nameof( periodKind ), periodKind, null )
-        }}";
+        return $"{Prefix}{ComponentSeparator}{timestamp.ToString( TimestampFormatString, DateTimeFormatInfo.InvariantInfo )}{ComponentSeparator}{GetPeriodSuffix ( periodKind )}";
+    }
+
+    private string GetPeriodSuffix ( SnapshotPeriodKind periodKind )
+    {
+      return periodKind switch
+             {
+               SnapshotPeriodKind.Frequent => FrequentSuffix,
+               SnapshotPeriodKind.Hourly   => HourlySuffix,
+               SnapshotPeriodKind.Daily    => DailySuffix,
+               SnapshotPeriodKind.Weekly   => WeeklySuffix,
+               SnapshotPeriodKind.Monthly  => MonthlySuffix,
+               SnapshotPeriodKind.Yearly   => YearlySuffix,
+               SnapshotPeriodKind.NotSet   => throw new ArgumentOutOfRangeException ( nameof (periodKind), periodKind, $"{nameof (SnapshotPeriodKind.NotSet)} is not a valid value for this method." ),
+               _                           => throw new ArgumentOutOfRangeException ( nameof (periodKind), periodKind, null )
+             };
     }
 
     /// <summary>
