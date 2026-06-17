@@ -8,7 +8,7 @@
 [![Latest 'release' Tag Status](https://github.com/snapsinazfs/snapsinazfs/actions/workflows/build-and-test-release-tag.yml/badge.svg)](https://github.com/snapsinazfs/snapsinazfs/actions/workflows/build-and-test-release-tag.yml)
  
  Current stable release version: 2.0.3\
- Current development branch: siaz-2.1
+ Current development branch: siaz-3.0
 
  Stable and pre-release versions are available on GitHub in the Releases section. Cloning the repository for local builds is only recommended from release-\* tags.
 
@@ -16,7 +16,7 @@
 
  ## Requirements
 
- SIAZ is built in c\# on .net 10, and strives to require no other external dependencies to be manually installed other than the .net 10 runtim or .net 10 SDK (to build from source), and a supported version of ZFS (currently 2.1 and up).\
+ SIAZ is built in c\# on .net 10, and strives to require no other external dependencies to be manually installed other than the .net 10 runtim or .net 10 SDK (to build from source), and a supported version of ZFS (currently 2.2 and up).\
  Building SIAZ also requires standard command-line utilities that typically exist on any supported Linux distribution, such as `install`, `cp`, and the like.
 
  SIAZ will likely build and run on any modern Linux system that supports the required .NET version and ZFS on Linux version.\
@@ -35,7 +35,7 @@
    - If you are using a pre-built version of SIAZ (not yet provided here), the .net 10.0 runtime is sufficient
    - If you are building from source, the .net 10.0 SDK is required. `make` is an optional dependency for a simplified build workflow familiar to Linux users.
    - If you are using a pre-built AOT-compiled version of SIAZ or a pre-build framework-independent version of SIAZ (not yet provided here), you do not need ANY .net components installed, but it is your responsibility to ensure binary compatibility with the target system.
- - ZFS version 2.1 or higher
+ - ZFS version 2.2 or higher
    - Some features may require higher ZFS versions. That is and will be documented when relevant. It is your responsibility to ensure ZFS compatibility, in the version of the kernel module, the userspace utilities, and in the necessary feature flags on pools/datasets, where relevant.
    - Live testing against ZFS is performed against version 2.2 and 2.3, at present, so I suggest 2.2 or higher.
  - For use as a daemon, systemd is supported, with a minimum version of that which is distributed via your distribution's official package repositories
