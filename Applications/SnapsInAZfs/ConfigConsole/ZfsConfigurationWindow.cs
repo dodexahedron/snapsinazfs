@@ -1039,7 +1039,7 @@ public sealed partial class ZfsConfigurationWindow
     {
         Logger.Trace( "Zfs Configuration Window initialized" );
         ConfiguredTaskAwaitable zfsRefreshTask = RefreshZfsTreeViewFromZfsAsync( ).ConfigureAwait( true );
-        templateListView.SetSource( ConfigConsole.TemplateListItems );
+        await templateListView.SetSourceAsync( ConfigConsole.TemplateListItems ).ConfigureAwait(true);
         SetCanFocusStates( );
         SetTagsForPropertyFields( );
         SetTabStops( );
