@@ -78,8 +78,6 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
     private DateTimeOffset _lastRunTime = DateTimeOffset.Now;
     private DateTimeOffset _nextRunTime = DateTimeOffset.Now;
 
-    private ApplicationState _state = ApplicationState.Init;
-
     /// <summary>
     ///     Gets the last exit code that was set by methods called by the service.
     /// </summary>
@@ -92,17 +90,17 @@ public sealed class SiazService : BackgroundService, IApplicationStateObservable
     /// <exception cref="Exception" accessor="set">A delegate callback throws an exception.</exception>
     public ApplicationState State
     {
-        get => _state;
-        private set
+      get;
+      private set
+      {
+        if ( field != value )
         {
-            if ( _state != value )
-            {
-                ApplicationStateChanged?.Invoke( this, new( _state, value ) );
-            }
-
-            _state = value;
+          ApplicationStateChanged?.Invoke ( this, new ( field, value ) );
         }
-    }
+
+        field = value;
+      }
+    } = ApplicationState.Init;
 
     /// <inheritdoc />
     public DateTimeOffset ServiceStartTime { get; } = DateTimeOffset.Now;
