@@ -37,11 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.4" />
-    <PackageReference Include="NUnit.Extension.VSProjectLoader" Version="3.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Libraries\SnapsInAZfs.Interop\SnapsInAZfs.Interop.csproj" />
   </ItemGroup>
 
