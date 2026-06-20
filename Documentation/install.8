@@ -91,8 +91,8 @@ After install, see \fB\*[SIAZLC](5)\fP for configuration documentation.\&
 .TQ
 .B Requirements
 .IP
-To build from source, you must have the .net 7.0 SDK installed.\&
-Once built, only the .net 7.0 runtime is required to execute \*[SIAZ].\&
+To build from source, you must have the .net 10.0 SDK installed.\&
+Once built, only the .net 10.0 runtime is required to execute \*[SIAZ].\&
 .RS
 .IP
 Framework\-independent builds can be created,
@@ -109,11 +109,8 @@ for details on build options not documented or supported here.\&
 .B Note to Ubuntu users
 .IP
 The snap package for the .net SDK has known problems, especially for resolving the path of the SDK.\&
-Use the dotnet7 apt package provided by Canonical for best results.\&
-The dotnet\-sdk\-7.0 package provided by Microsoft in the microsoft\-prod repository can be made to work,
-but may require a symlink to the sdk directory,
-as it is not properly defined in the Microsoft\-provided package for Ubuntu.\&
-Support for that is not provided here.\&
+Use the dotnet10 apt package provided by Canonical for best results.\&
+The dotnet\-sdk\-10.0 package provided by Microsoft in the microsoft\-prod repository also works.\&
 .RE
 .IP
 To use the Makefile,
